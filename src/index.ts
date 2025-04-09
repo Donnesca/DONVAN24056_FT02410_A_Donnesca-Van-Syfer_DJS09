@@ -3,18 +3,45 @@
 // all TypeScript weakness flags.
 // : number
 
-import { showReviewTotal, populateUser, showDetails } from "./utils.ts";
+import {
+  showReviewTotal,
+  populateUser,
+  showDetails,
+  getTopTwoReviews,
+} from "./utils.ts";
 import { Price, Country } from "./types.ts";
 import { Permissions, LoyaltyUser } from "./enums.ts";
+import Review from "./interfaces.ts";
 const propertyContainer = document.querySelector(".properties");
+const reviewContainer = document.querySelector(".reviews");
+const container = document.querySelector(".container");
+const button = document.querySelector("button");
 const footer = document.querySelector(".footer");
 
 let isLoggedIn: boolean;
 
+enum Permissions {
+  ADMIN = "ADMIN",
+  READ_ONLY = "READ_ONLY",
+}
+
+enum LoyaltyUser {
+  GOLD_USER = "GOLD_USER",
+  SILVER_USER = "SILVER_USER",
+  BRONZE_USER = "BRONZE_USER",
+}
+
+interface Review {
+  name: string;
+  stars: number;
+  loyaltyUser: LoyaltyUser;
+  date: string;
+}
+
 // Reviews
-const reviews: any[] = [
+const reviews: Review[] = [
   {
-    name: "Sheia",
+    name: "Sheila",
     stars: 5,
     loyaltyUser: LoyaltyUser.GOLD_USER,
     date: "01-04-2021",
@@ -30,7 +57,6 @@ const reviews: any[] = [
     stars: 4,
     loyaltyUser: LoyaltyUser.SILVER_USER,
     date: "27-03-2021",
-    description: "Great hosts, location was a bit further than said.",
   },
 ];
 
@@ -43,20 +69,22 @@ const you = {
   stayedAt: ["florida-home", "oman-flat", "tokyo-bungalow"],
 };
 
-// Array of Properties
-const properties: {
+interface Property {
   image: string;
   title: string;
-  price: number;
+  price: Price;
   location: {
     firstLine: string;
     city: string;
-    code: number;
-    country: string;
+    code: number | string;
+    country: Country;
   };
   contact: [number, string];
   isAvailable: boolean;
-}[] = [
+}
+
+// Array of Properties
+const properties: Property[] = [
   {
     image: "images/colombia-property.jpg",
     title: "Colombian Shack",
@@ -73,7 +101,7 @@ const properties: {
   {
     image: "images/poland-property.jpg",
     title: "Polish Cottage",
-    price: 34,
+    price: 30,
     location: {
       firstLine: "no 23",
       city: "Gdansk",
@@ -86,15 +114,28 @@ const properties: {
   {
     image: "images/london-property.jpg",
     title: "London Flat",
-    price: 23,
+    price: 25,
     location: {
       firstLine: "flat 15",
       city: "London",
-      code: 35433,
+      code: "SW4 5XW",
       country: "United Kingdom",
     },
     contact: [+34829374892553, "andyluger@aol.com"],
     isAvailable: true,
+  },
+  {
+    image: "images/malaysian-hotel.jpeg",
+    title: "Malia Hotel",
+    price: 35,
+    location: {
+      firstLine: "Room 4",
+      city: "Malia",
+      code: 45334,
+      country: "Malaysia",
+    },
+    contact: [+60349822083, "lee34@gmail.com"],
+    isAvailable: false,
   },
 ];
 
@@ -115,6 +156,23 @@ for (let i = 0; i < properties.length; i++) {
   propertyContainer.appendChild(card);
 }
 
+let count = 0;
+function addReviews(array: Review[]): void {
+  if (!count) {
+    count++;
+    const topTwo = getTopTwoReviews(array);
+    for (let i = 0; i < topTwo.length; i++) {
+      const card = document.createElement("div");
+      card.classList.add("review-card");
+      card.innerHTML = topTwo[i].stars + " stars from " + topTwo[i].name;
+      reviewContainer.appendChild(card);
+    }
+    container.removeChild(button);
+  }
+}
+
+button.addEventListener("click", () => addReviews(reviews));
+
 let currentLocation: [string, string, number] = ["London", "11.03", 17];
 footer.innerHTML =
   currentLocation[0] +
@@ -123,3 +181,33 @@ footer.innerHTML =
   " " +
   currentLocation[2] +
   "°";
+
+// Classes
+class MainProperty {
+  src: string;
+  title: string;
+  reviews: Review[];
+  constructor(src: string, title: string, reviews: Review[]) {
+    this.src = src;
+    this.title = title;
+    this.reviews = reviews;
+  }
+}
+
+let yourMainProperty = new MainProperty(
+  "images/italian-property.jpg",
+  "Italian House",
+  [
+    {
+      name: "Olive",
+      stars: 5,
+      loyaltyUser: LoyaltyUser.GOLD_USER,
+      date: "12-04-2021",
+    },
+  ]
+);
+
+const mainImageContainer = document.querySelector(".main-image");
+const image = document.createElement("img");
+image.setAttribute("src", yourMainProperty.src);
+mainImageContainer.appendChild(image);
